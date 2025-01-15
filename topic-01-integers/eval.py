@@ -1,12 +1,15 @@
 def eval(s):
     for c in s:
-        assert c in "-0123456789"
+        assert c in "-0123456789."
     n = 0
     if s[0] == '-':
         sign = -1
         s = s[1:] ## drop first char
     else:
         sign = 1
+    multi = 1.0
+    fractional = False
+    
     assert len(s) > 0
     while len(s) > 0:
         n = n * 10 + ord(s[0]) - ord("0")
