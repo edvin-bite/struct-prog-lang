@@ -1,6 +1,6 @@
 def eval(s):
     for c in s:
-        assert s in "-0123456789"
+        assert c in "-0123456789"
     n = 0
     if s[0] == '-':
         sign = -1
