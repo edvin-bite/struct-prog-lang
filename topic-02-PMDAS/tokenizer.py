@@ -10,7 +10,8 @@ patterns = [
     [r"\/", "/"],
     [r"\(", "("],
     [r"\)", ")"],
-    [r"\s+", "whitespace"]
+    [r"\s+", "whitespace"],
+    [r".", "error"] # '.' in reg expression matches anything
 ]
 
 for pattern in patterns:
@@ -26,6 +27,8 @@ def tokenize(characters):
                 break
         assert match
         #(proccess errors)
+        if tag == "error":
+            raise Exception("Syntax Error")
         token = {
             "tag":tag,
             "position":position,
@@ -69,8 +72,18 @@ def test_whitespace():
     print("test whitespace")
     tokens = tokenize("1 + 2")
     assert tokens == [{'tag': 'number', 'position': 0, 'value': 1}, {'tag': '+', 'position': 2, 'value': '+'}, {'tag': 'number', 'position': 4, 'value': 2}, {'tag': None, 'value': None, 'position': 5}]
+
+def test_error():
+    print("test error")
+    try:
+        t = tokenize("$1+2")
+        assert False, "Should have raised an error for invalid character."
+    except Exception as e:
+        assert "Syntax Error" in str(e), f"Unexpected exception: {e}"
+
 if __name__ == "__main__":
     test_simple_token()
     test_number_token()
     test_multiple_tokens()
     test_whitespace()
+    test_error()
