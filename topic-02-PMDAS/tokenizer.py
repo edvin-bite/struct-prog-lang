@@ -3,8 +3,74 @@ import re
 
 # Define patterns for tokens
 patterns = [
-    [r"\d+"] # '*': 0 or more, '+' 1 or more, etc.
+    [r"\d+", "number"], # '*': 0 or more, '+' 1 or more, etc.
+    [r"\+", "+"],
+    [r"\-", "-"],
+    [r"\*", "*"],
+    [r"\/", "/"],
+    [r"\(", "("],
+    [r"\)", ")"],
+    [r"\s+", "whitespace"]
 ]
 
+for pattern in patterns:
+    pattern[0] = re.compile(pattern[0])
+
 def tokenize(characters):
-    return []
+    tokens = []
+    position = 0
+    while position < len(characters):
+        for pattern, tag in patterns:
+            match = pattern.match(characters, position)
+            if match:
+                break
+        assert match
+        #(proccess errors)
+        token = {
+            "tag":tag,
+            "position":position,
+            "value":match.group(0)
+        }
+        if token["tag"] == "number":
+            token["value"] = int(token["value"])
+        if token["tag"] != "whitespace":
+            tokens.append(token)
+        position = match.end()
+    #append end-of-stream marker
+    tokens.append({
+        "tag":None,
+        "value":None,
+        "position":position
+    })
+    return tokens
+
+def test_simple_token():
+    print("test simple token")
+    examples = "+-*/()"
+    for example in examples:
+        t = tokenize(example)[0]
+        assert t["tag"] == example
+        assert t["position"] == 0
+        assert t["value"] == example
+
+def test_number_token():
+    print("test number tokens")
+    for s in ["1","11"]:
+        t = tokenize(s)
+        assert len(t) == 2
+        assert t[0]["tag"] == "number"
+        assert t[0]["value"] == int(s)
+
+def test_multiple_tokens():
+    print("testing multiple tokens")
+    tokens = tokenize("1+2")
+
+def test_whitespace():
+    print("test whitespace")
+    tokens = tokenize("1 + 2")
+    assert tokens == [{'tag': 'number', 'position': 0, 'value': 1}, {'tag': '+', 'position': 2, 'value': '+'}, {'tag': 'number', 'position': 4, 'value': 2}, {'tag': None, 'value': None, 'position': 5}]
+if __name__ == "__main__":
+    test_simple_token()
+    test_number_token()
+    test_multiple_tokens()
+    test_whitespace()
