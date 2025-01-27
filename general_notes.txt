@@ -1,0 +1,16 @@
+/meaningless\code --tokenizer--> tokens {[words][in][vocabulary]}
+
+pizza duck the five behind
+^ all these words are in the vocabulary, but not in this order.
+
+expressions are the correct use of the vocabulary:
+ - expression = {digits}
+ - expression = expression <digit>
+ - expression = expression "+" expression
+
+first example: expression = {digit}
+ends with a terminal     terminal^
+
+expression may also be translated to be seen as problem and sub-problems.
+
+keep applying rules on expressions until all of them are "terminals" and you have a sequence of terminals
