@@ -3,7 +3,7 @@ import re
 
 # Define patterns for tokens
 patterns = [
-    [r"\d+", "number"], # '*': 0 or more, '+' 1 or more, etc.
+    [r"\d+(.d*)", "number"], # '*': 0 or more, '+' 1 or more, etc.
     [r"\+", "+"],
     [r"\-", "-"],
     [r"\*", "*"],
@@ -63,6 +63,12 @@ def test_number_token():
         assert len(t) == 2
         assert t[0]["tag"] == "number"
         assert t[0]["value"] == int(s)
+    for s in ["1.1","11.11","11."]:
+        t = tokenize(s)
+        assert len(t) == 2
+        assert t[0]["tag"] == "number"
+        assert t[0]["value"] == float(s)
+
 
 def test_multiple_tokens():
     print("testing multiple tokens")

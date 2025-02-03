@@ -46,9 +46,15 @@ looking at A token, "based on this, what needs to happen?" if can be done as sim
   however we are writing a recursive decent parser.
 """
 
+"""
+    factor = <number> | "(" expresion ")"
+    term = factor { "*"|"/" factor }
+    expression = term { "+"|"-" term }
+"""
+
 def parse_factor(tokens):
     """
-    factor = <number>
+    factor = <number> | "(" expresion ")"
     """
     token = tokens[0]
     if token["tag"] == "number":
@@ -56,29 +62,13 @@ def parse_factor(tokens):
             "tag":"number",
             "value": token["value"]
         }, tokens[1:]
-    raise Exception(f"Unexpected token '{token['tag']}' at position {token['number']}.")
-
-def parse_term(tokens):
-    """
-    term = factor { "*"|"/" factor }
-    """
-    node, tokens = parse_factor(tokens)
-    while tokens[0]["tag"] in ["*","/"]:
-        tag = tokens[0]["tag"]
-        right_node, tokens = parse_factor(tokens[1:])
-        node = {"tag":tag, "left":node, "right":right_node}
-    return node, tokens
-
-def parse_expression(tokens):
-    """
-    arithmetic_expression = term { "+"|"-" term }
-    """
-    node, tokens = parse_term(tokens)
-    while tokens[0]["tag"] in ["+","-"]:
-        tag = tokens[0]["tag"]
-        right_node, tokens = parse_term(tokens[1:])
-        node = {"tag":tag, "left":node, "right":right_node}
-    return node, tokens
+    if token["tag"] == "(":
+        #tokens = tokens[1:]
+        ast, tokens = parse_expression(tokens[1:])
+        assert tokens[0]["tag"] == ")"
+        #tokens = tokens[1:]
+        return ast, tokens[1:]
+    raise Exception(f"Unexpected token '{token['tag']}' at position {token['position']}.")
 
 def test_parse_factor():
     """
@@ -90,9 +80,31 @@ def test_parse_factor():
         ast, tokens = parse_factor(tokens)
         assert ast == {'tag':'number', 'value':int(s)}
         assert tokens[0]['tag']==None
-        print(ast)
+        #print(ast)
+    for s in ["(1)", "(22)"]:
+        tokens = tokenize(s)
+        ast, tokens = parse_factor(tokens)
+        s_n = s.replace("(","").replace(")","")
+        #s_n = s[1:-1]
+        assert ast == {'tag':'number', 'value':int(s_n)}
+        assert tokens[0]['tag']==None
+    tokens = tokenize("(2+3)")
+    ast, tokens = parse_factor(tokens)
+    s_n = s.replace("(","").replace(")","")
+
     #exit(0)
     print("done test parse factor.")
+
+def parse_term(tokens):
+    """
+    term = factor { "*"|"/" factor }
+    """
+    node, tokens = parse_factor(tokens)
+    while tokens[0]["tag"] in ["*","/"]:
+        tag = tokens[0]["tag"]
+        right_node, tokens = parse_factor(tokens[1:])
+        node = {"tag":tag, "left":node, "right":right_node}
+    return node, tokens
 
 def test_parse_term():
     """
@@ -106,9 +118,22 @@ def test_parse_term():
     tokens = tokenize("2*4/6")
     ast, tokens = parse_term(tokens)
     assert ast == {'tag': '/', 'left': {'tag': '*', 'left': {'tag': 'number', 'value': 2}, 'right': {   'tag': 'number', 'value': 4}}, 'right': {'tag': 'number', 'value': 6}}
-    print(ast)
+    #print(ast)
     print("done test parse term.")
     #exit(0)
+
+def parse_expression(tokens):
+    """
+    arithmetic_expression = term { "+"|"-" term }
+    """
+    node, tokens = parse_term(tokens)
+    while tokens[0]["tag"] in ["+","-"]:
+        tag = tokens[0]["tag"]
+        right_node, tokens = parse_term(tokens[1:])
+        node = {"tag":tag, "left":node, "right":right_node}
+    return node, tokens
+
+
 
 def test_parse_expression():
     """
@@ -122,11 +147,14 @@ def test_parse_expression():
     tokens = tokenize("2*4/6")
     ast, tokens = parse_expression(tokens)
     assert ast == {'tag': '/', 'left': {'tag': '*', 'left': {'tag': 'number', 'value': 2}, 'right': {   'tag': 'number', 'value': 4}}, 'right': {'tag': 'number', 'value': 6}}
-    tokens = tokenize("1+2*4")
+    tokens = tokenize("1+(2+3)*4")
     ast, tokens = parse_expression(tokens)
-    print(ast)
+    #print(ast)
     print("done test parse arithetic expression.")
     exit(0)
+
+def parse(tokens):
+    return parse_expression(tokens)[0]
 
 if __name__ == "__main__":
     test_parse_factor()
