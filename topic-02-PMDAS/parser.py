@@ -10,6 +10,7 @@ accept a string of tokens, return all ASI expressed as stack of dictionaries
     term = factor { "*"|"/" factor }
     arithmetic_expression = term { "+"|"-" term }
     expression = arithmetic_expression
+    statement = expression
 """
 """ personal
 rules:
@@ -151,6 +152,29 @@ def test_parse_expression():
     ast, tokens = parse_expression(tokens)
     #print(ast)
     print("done test parse arithetic expression.")
+    #exit(0)
+
+def parse_statement(tokens):
+    """
+    statement = expression
+    """
+    # if consume non terminal, use that non terminal's rule to consume it
+    ast, tokens = parse_expression(tokens)
+    return ast, token
+
+def test_parse_statement():
+    for s in ["1","22","333"]:
+        tokens = tokenize(s)
+        ast, tokens = parse_expression(tokens)
+        assert ast=={'tag':'number', 'value':int(s)}
+        assert tokens[0]['tag']==None
+    tokens = tokenize("2*4/6")
+    ast, tokens = parse_expression(tokens)
+    assert ast == {'tag': '/', 'left': {'tag': '*', 'left': {'tag': 'number', 'value': 2}, 'right': {   'tag': 'number', 'value': 4}}, 'right': {'tag': 'number', 'value': 6}}
+    tokens = tokenize("1+2*4")
+    ast, tokens = parse_expression(tokens)
+    print(ast)
+    print("done test parse arithetic statement.")
     exit(0)
 
 def parse(tokens):
@@ -160,3 +184,4 @@ if __name__ == "__main__":
     test_parse_factor()
     test_parse_term()
     test_parse_expression()
+    test_parse_statement()
