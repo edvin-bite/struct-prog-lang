@@ -2,6 +2,13 @@ from tokenizer import tokenize
 from parser import parse
 
 def evaluate(ast):
+    global printed_string
+    if ast["tag"] == "print":
+        value = evaluate(ast["value"])
+        s = str(value)
+        print(s)
+        printed_string = s
+        return None
     if ast["tag"] == "number":
         return ast["value"]
     if ast["tag"] in ["+","-","*","/"]:

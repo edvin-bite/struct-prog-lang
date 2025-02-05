@@ -157,12 +157,23 @@ def test_parse_expression():
 def parse_statement(tokens):
     """
     statement = expression
+    statment = <print> expression | expression
     """
-    # if consume non terminal, use that non terminal's rule to consume it
-    ast, tokens = parse_expression(tokens)
-    return ast, token
+    if tokens[0]["tag"] == "print": # adding an operator
+        expr_ast, tokens = parse_expression(tokens[1:])
+        ast = {
+            'tag':'print',
+            'value': expr_ast
+        }
+    else:
+        ast, tokens = parse_expression(tokens[1:])
+    return ast, tokens
 
 def test_parse_statement():
+    """
+    statement = expression
+    statment = <print> expression | expression
+    """
     for s in ["1","22","333"]:
         tokens = tokenize(s)
         ast, tokens = parse_expression(tokens)
@@ -173,9 +184,13 @@ def test_parse_statement():
     assert ast == {'tag': '/', 'left': {'tag': '*', 'left': {'tag': 'number', 'value': 2}, 'right': {   'tag': 'number', 'value': 4}}, 'right': {'tag': 'number', 'value': 6}}
     tokens = tokenize("1+2*4")
     ast, tokens = parse_expression(tokens)
-    print(ast)
+
+    tokens = tokenize("print 1*4")
+    ast, tokens = parse_statement(tokens)
+    assert ast == {'tag': 'print', 'value': {'tag': '*', 'left': {'tag': 'number', 'value': 1}, 'right': {'tag': 'number', 'value': 4}}}
+    #print(ast)
     print("done test parse arithetic statement.")
-    exit(0)
+    #exit(0)
 
 def parse(tokens):
     return parse_expression(tokens)[0]
@@ -185,3 +200,4 @@ if __name__ == "__main__":
     test_parse_term()
     test_parse_expression()
     test_parse_statement()
+    exit(0)

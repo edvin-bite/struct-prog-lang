@@ -3,7 +3,9 @@ import re
 
 # Define patterns for tokens
 patterns = [
+    [r"print", "print"],
     [r"\d*\.\d+|\d+\.\d*|\d+", "number"], # '*': 0 or more, '+' 1 or more, etc.
+    [r"[a-zA-Z_][a-zA-Z0-9_]*", "identifier"],
     [r"\+", "+"],
     [r"\-", "-"],
     [r"\*", "*"],
