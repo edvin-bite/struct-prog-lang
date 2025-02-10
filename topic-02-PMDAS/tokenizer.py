@@ -77,11 +77,32 @@ def test_number_token():
 def test_multiple_tokens():
     print("testing multiple tokens")
     tokens = tokenize("1+2")
+    assert tokens == [{'tag': 'number', 'position': 0, 'value': 1}, {'tag': '+', 'position': 1, 'value': '+'}, {'tag': 'number', 'position': 2, 'value': 2}, {'tag': None, 'value': None, 'position': 3}]
 
 def test_whitespace():
     print("test whitespace")
     tokens = tokenize("1 + 2")
     assert tokens == [{'tag': 'number', 'position': 0, 'value': 1}, {'tag': '+', 'position': 2, 'value': '+'}, {'tag': 'number', 'position': 4, 'value': 2}, {'tag': None, 'value': None, 'position': 5}]
+
+def test_keywords():
+    print("test keywords...")
+    for keyword in [
+        "print",
+    ]:
+        t = tokenize(keyword)
+        assert len(t) == 2
+        assert t[0]["tag"] == keyword, f"expected {keyword}, got {t[0]}"
+        assert "value" not in t
+
+def test_identifier_tokens():
+    print("test identifier tokens...")
+    for s in ["x", "y", "z", "alpha", "beta", "gamma"]:
+        t = tokenize(s)
+        assert len(t) == 2
+        assert t[0]["tag"] == "identifier"
+        assert t[0]["value"] == s
+
+
 
 def test_error():
     print("test error")
@@ -96,4 +117,6 @@ if __name__ == "__main__":
     test_number_token()
     test_multiple_tokens()
     test_whitespace()
+    test_keywords()
+    test_identifier_tokens()
     test_error()

@@ -170,3 +170,12 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 topic-02-PMDAS/parser_class_pull.py
+lesson-extractions/struct-prog-lang-main/.gitignore
+lesson-extractions/struct-prog-lang-main/README.md
+lesson-extractions/struct-prog-lang-main/topic-01-integers/eval.py
+lesson-extractions/struct-prog-lang-main/topic-02-PMDAS/evaluator.py
+lesson-extractions/struct-prog-lang-main/topic-02-PMDAS/example.t
+lesson-extractions/struct-prog-lang-main/topic-02-PMDAS/parser.py
+lesson-extractions/struct-prog-lang-main/topic-02-PMDAS/runner.py
+lesson-extractions/struct-prog-lang-main/topic-02-PMDAS/tokenizer.py
+lesson-extractions/struct-prog-lang-main/topic-02-PMDAS/trivial

@@ -1,6 +1,8 @@
 from tokenizer import tokenize
 from parser import parse
 
+printed_string = None
+
 def evaluate(ast):
     global printed_string
     if ast["tag"] == "print":
@@ -98,6 +100,14 @@ def test_evaluate_expression():
     assert eval("1+2+3") == 6
     assert eval("1+2*3") == 7
     assert eval("(1+2)*3") == 9
+    assert eval("(1.0+2.1)*3") == 9.3
+
+def test_evaluate_print():
+    print("testing evaluate print")
+    assert eval("print 3") == None
+    assert printed_string == "3"
+    assert eval("print 3.14") == None
+    assert printed_string == "3.14"
 
 if __name__ == "__main__":
     test_evaluate_number()
@@ -106,4 +116,5 @@ if __name__ == "__main__":
     test_evaluate_multiplication()
     test_evaluate_division()
     test_evaluate_expression()
+    test_evaluate_print()
     print("done.")

@@ -75,6 +75,7 @@ def test_parse_factor():
     """
     factor = <number>
     """
+    print("testing parse_factor()")
     for s in ["1","22","333"]:
         #tokens = tokenize("1")
         tokens = tokenize(s)
@@ -91,10 +92,9 @@ def test_parse_factor():
         assert tokens[0]['tag']==None
     tokens = tokenize("(2+3)")
     ast, tokens = parse_factor(tokens)
-    s_n = s.replace("(","").replace(")","")
-
+    #s_n = s.replace("(","").replace(")","")
+    assert ast == {'tag': '+', 'left': {'tag':'number', 'value':2}, 'right': {'tag':'number' , 'value':3}}
     #exit(0)
-    print("done test parse factor.")
 
 def parse_term(tokens):
     """
@@ -111,6 +111,7 @@ def test_parse_term():
     """
     term = factor { "*"|"/" factor }
     """
+    print("testing parse_term()")
     for s in ["1","22","333"]:
         tokens = tokenize(s)
         ast, tokens = parse_term(tokens)
@@ -145,7 +146,7 @@ def test_parse_expression():
         ast, tokens = parse_expression(tokens)
         assert ast=={'tag':'number', 'value':int(s)}
         assert tokens[0]['tag']==None
-    tokens = tokenize("2*4/6")
+    tokens = tokenize("2*4/6") # is error if fails here, if not ignore.
     ast, tokens = parse_expression(tokens)
     assert ast == {'tag': '/', 'left': {'tag': '*', 'left': {'tag': 'number', 'value': 2}, 'right': {   'tag': 'number', 'value': 4}}, 'right': {'tag': 'number', 'value': 6}}
     tokens = tokenize("1+(2+3)*4")
@@ -166,7 +167,7 @@ def parse_statement(tokens):
             'value': expr_ast
         }
     else:
-        ast, tokens = parse_expression(tokens[1:])
+        ast, tokens = parse_expression(tokens)#(tokens[1:]) | no cutting the tokens
     return ast, tokens
 
 def test_parse_statement():
@@ -193,11 +194,12 @@ def test_parse_statement():
     #exit(0)
 
 def parse(tokens):
-    return parse_expression(tokens)[0]
+    ast, tokens = parse_statement(tokens)
+    return ast
 
 if __name__ == "__main__":
     test_parse_factor()
     test_parse_term()
     test_parse_expression()
     test_parse_statement()
-    exit(0)
+    print("done.")
