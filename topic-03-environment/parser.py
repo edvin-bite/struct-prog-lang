@@ -229,6 +229,18 @@ def test_parse_assignment_statement():
     ast, tokens = parse_assignment_statement(tokenize("i=2"))
     print(ast)
 
+def parse_arithmetic_expression(tokens):
+    tokens
+
+def test_parse_arithmetic_expresion():
+    return
+
+def parse_relational_expression(tokens):
+    tokens
+
+def test_parse_relational_expressions():
+    return
+
 def parse(tokens):
     ast, tokens = parse_statement(tokens)
     return ast
