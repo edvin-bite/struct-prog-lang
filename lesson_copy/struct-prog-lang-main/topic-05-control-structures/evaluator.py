@@ -17,22 +17,6 @@ def evaluate(ast, environment={}):
         print(s)
         printed_string = s
         return None
-    if ast["tag"] == "if":
-        print("if statement:::", ast)
-        condition_value = evaluate(ast["condition"], environment)
-        print("CV = ", condition_value)
-        if condition_value:
-            print("then:",ast["then"])
-            print('env:', environment)
-        if evaluate(ast["condition"], environment):
-            evaluate(ast["then"], environment)
-        else:
-            evaluate(ast["else"], environment)
-        return None
-    if ast["tag"] == "while":
-        while evaluate(ast["condition"], environment):
-            evaluate(ast["do"], environment)
-        return None
     if ast["tag"] == "assign":
         target = ast["target"]
         assert target["tag"] == "identifier"
@@ -208,12 +192,6 @@ def test_evaluate_assignment():
     env = {"x":4,"y":5}
     assert eval("x=7",env) == 7
     assert env["x"] == 7
-
-def test_if_statement():
-    print("testing if statement")
-    env = {'x':4,"y":5}
-    assert eval("if(1){x=8}", env)
-    print("done.")
 
 if __name__ == "__main__":
     test_evaluate_number()

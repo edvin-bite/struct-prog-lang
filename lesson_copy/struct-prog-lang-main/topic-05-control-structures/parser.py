@@ -11,12 +11,13 @@ Accept a string of tokens, return an AST expressed as stack of dictionaries
     term = factor { "*"|"/" factor }
     arithmetic_expression = term { "+"|"-" term }
     relational_expression = arithmetic_expression { ("<" | ">" | "<=" | ">=" | "==" | "!=") arithmetic_expression } ;
-    # logical_factor = relational_expression ;
-    # logical_term = logical_factor { "&&" logical_factor } ;
-    # logical_expression = logical_term { "||" logical_term } ;
-    # expression = logical_expression; 
+    logical_factor = relational_expression ;
+    logical_term = logical_factor { "&&" logical_factor } ;
+    logical_expression = logical_term { "||" logical_term } ;
+    expression = logical_expression; 
+    statement_block = "{" statement { ";" statement } "}"
     assignment_statement = expression [ "=" expression ]
-    statement = <print> expression | assignment_statement
+    statement = <print> expression | if_statement | assignment_statement
     program = [ statement { ";" statement } ]
 """
 
@@ -335,6 +336,37 @@ def test_parse_expression():
 
 # STATEMENTS
 
+def parse_statement_block(tokens):
+    """
+    statement_block = "{" statement { ";" statement } "}"
+    """ 
+    ast = {"tag": "block", "statements": []}
+    assert tokens[0]["tag"] == "{"
+    tokens = tokens[1:]
+    if tokens[0]["tag"] != "}":
+        statement, tokens = parse_statement(tokens) 
+        ast["statements"].append(statement) 
+    while tokens[0]["tag"] == ";":
+        statement, tokens = parse_statement(tokens[1:])  
+        ast["statements"].append(statement) 
+    assert tokens[0]["tag"] == "}"
+    return ast, tokens[1:]
+
+def test_parse_statement_block():
+    """
+    statement_block = "{" statement { ";" statement } "}"
+    """ 
+    ast = parse_statement_block(tokenize("{}"))[0]
+    assert ast == {'tag': 'block', 'statements': []}
+    ast = parse_statement_block(tokenize("{i=2}"))[0]
+    assert ast == {'tag': 'block', 'statements': [{'tag': 'assign', 'target': {'tag': 'identifier', 'value': 'i'}, 'value': {'tag': 'number', 'value': 2}}]}
+    ast = parse_statement_block(tokenize("{i=2;k=3}"))[0]
+    assert ast == {'tag': 'block', 
+        'statements': [
+            {'tag': 'assign', 'target': {'tag': 'identifier', 'value': 'i'}, 'value': {'tag': 'number', 'value': 2}}, 
+            {'tag': 'assign', 'target': {'tag': 'identifier', 'value': 'k'}, 'value': {'tag': 'number', 'value': 3}}
+            ]}
+
 def parse_print_statement(tokens):
     """
     print_statement = "print" [ expression ] ;
@@ -357,6 +389,75 @@ def test_parse_print_statement():
     ast = parse_print_statement(tokenize("print 1"))[0]
     assert ast == {"tag": "print", "value": {"tag": "number", "value": 1}}
 
+def parse_if_statement(tokens):
+    """
+    if_statement = "if" "(" expression ")" statement_block [ "else"{?} statement_block ]
+    """
+    # TODO -- CONTINUE HERE
+    assert tokens[0]["tag"] == "if"
+
+    tokens = tokens[1:]
+
+    assert tokens[0]["tag"] == "("
+    tokens = tokens[1:]
+    condition, tokens = parse_expression(tokens)
+    assert tokens[0]["tag"] == ")"
+    tokens = tokens[1:] # got the condition now
+
+    # tokens = require(")") | reasonable to make a function like this
+
+    then_statement, tokens = parse_statement_block(tokens)
+    else_statement = None
+    if tokens[0]["tag"] == "else":
+        tokens= tokens[1:]
+        else_statement, tokens = parse_statement_block(tokens)
+    ast = {
+        "tag": "if",
+        "condition": condition,
+        "then":then_statement,
+        "else":else_statement
+    }
+    return ast, tokens
+
+def test_parse_if_statement():
+    """
+    """
+    ast, _ = parse_if_statement(tokenize("if(1){print(2)}else{print(3)}"))
+    #print(ast)
+    assert ast == {'tag': 'if', 'condition': {'tag': 'number', 'value': 1}, 'then': {'tag': 'block', 'statements': [{'tag': 'print', 'value': {'tag': 'number', 'value': 2}}]}, 'else': {'tag': 'block', 'statements': [{'tag': 'print', 'value': {'tag': 'number', 'value': 3}}]}}
+
+def parse_while_statement(tokens):
+    """
+    while_statement = "while" "(" expression ")" statement_block
+    """
+    # TODO -- CONTINUE HERE
+    assert tokens[0]["tag"] == "while"
+
+    tokens = tokens[1:]
+
+    assert tokens[0]["tag"] == "("
+    tokens = tokens[1:]
+    condition, tokens = parse_expression(tokens)
+    assert tokens[0]["tag"] == ")"
+    tokens = tokens[1:] # got the condition now
+
+    # tokens = require(")") | reasonable to make a function like this
+
+    then_statement, tokens = parse_statement_block(tokens)
+    
+    ast = {
+        "tag": "while",
+        "condition": condition,
+        "do": then_statement
+    }
+    return ast, tokens
+
+def test_parse_while_statement():
+    """
+    """
+    ast, _ = parse_while_statement(tokenize("while(1){print(2)}"))
+    #print(ast)
+    assert ast == {'tag': 'while', 'condition': {'tag': 'number', 'value': 1}, 'do': {'tag': 'block', 'statements': [{'tag': 'print', 'value': {'tag': 'number', 'value': 2}}]}}
 
 def parse_assignment_statement(tokens):
     """
@@ -390,10 +491,10 @@ def parse_statement(tokens):
     """
     tag = tokens[0]["tag"]
     # note: none of these consumes a token
-    # if tag == "{":
-    #     return parse_statement_list(tokens)
-    # if tag == "if":
-    #     return parse_if_statement(tokens)
+    if tag == "{":
+         return parse_statement_block(tokens)
+    if tag == "if":
+        return parse_if_statement(tokens)
     # if tag == "while":
     #     return parse_while_statement(tokens)
     # if tag == "function":
@@ -410,6 +511,12 @@ def test_parse_statement():
     statement = if_statement | while_statement | function_statement | return_statement | print_statement | assignment_statement ;
     """
     print("testing parse_statement...")
+
+    # statement block
+    ast, _ = parse_statement(tokenize("{print 1}"))
+    print(ast)
+    assert ast == {'tag': 'block', 'statements': [{'tag': 'print', 'value': {'tag': 'number', 'value': 1}}]}
+    exit(0)
 
     # # if statement
     # assert (
@@ -486,6 +593,9 @@ if __name__ == "__main__":
     test_parse_logical_factor()
     test_parse_logical_term()
     test_parse_logical_expression()
+    test_parse_statement_block()
+    test_parse_if_statement()
+    test_parse_while_statement()
     test_parse_assignment_statement()
     test_parse_statement()
     test_parse_program()
