@@ -18,12 +18,12 @@ def parse_factor(tokens):
     factor = <number> | "(" expression ")"
     """
     token = tokens[0]
-    if token["tag"] == "number":
+    if token["tag"] == "number": # given a number, the factor is compleate and passed back apended.
         return {
             "tag":"number",
             "value": token["value"]
         }, tokens[1:]
-    if token["tag"] == "(":
+    if token["tag"] == "(": # a parentises causes a new expression and resets the parse order within the parentheses.
         ast, tokens = parse_expression(tokens[1:])
         assert tokens[0]["tag"] == ")"
         return ast, tokens[1:]
@@ -48,6 +48,33 @@ def test_parse_factor():
     tokens = tokenize("(2+3)")
     ast, tokens = parse_factor(tokens)
     assert ast == {'tag': '+', 'left': {'tag': 'number', 'value': 2}, 'right': {'tag': 'number', 'value': 3}}
+    tokens = tokenize("(4-(3+6)/2)")
+    ast, tokens = parse_factor(tokens)
+    assert ast == {
+        'tag': '-', 
+        'left': {
+            'tag': 'number', 
+            'value': 4
+        }, 
+        'right': {
+            'tag': '/', 
+            'left': {
+                'tag': '+', 
+                'left': {
+                    'tag': 'number', 
+                    'value': 3
+                }, 
+                'right': {
+                    'tag': 'number', 
+                    'value': 6
+                }
+            }, 
+            'right': {
+                'tag': 'number', 
+                'value': 2
+            }
+        }
+    }
 
 def parse_term(tokens):
     """
@@ -60,6 +87,8 @@ def parse_term(tokens):
         node = {"tag":tag, "left":node, "right":right_node}
 
     return node, tokens
+# order is in parse_expression() -> parse_term() -> parse_factor(), each on diffrent levels of priority
+# expression is first, with tree structure, it is evaluated last, finalized when term returns.
 
 def test_parse_term():
     """
@@ -77,6 +106,26 @@ def test_parse_term():
     tokens = tokenize("2*4/6")
     ast, tokens = parse_term(tokens)
     assert ast == {'tag': '/', 'left': {'tag': '*', 'left': {'tag': 'number', 'value': 2}, 'right': {'tag': 'number', 'value': 4}}, 'right': {'tag': 'number', 'value': 6}}
+    tokens = tokenize("(1+1)*1") # "+" fails as it is not in factor's scope
+    ast, tokens = parse_term(tokens)
+    assert ast == { # tree build by hand
+        'tag': '*',
+        'left': {
+            'tag': '+',
+            'left': {
+                'tag': 'number',
+                'value': 1
+            },
+            'right': {
+                'tag':'number',
+                'value': 1
+            }
+        },
+        'right': {
+            'tag': 'number',
+            'value': 1
+        }
+    }
 
 def parse_expression(tokens):
     """
@@ -109,6 +158,48 @@ def test_parse_expression():
     tokens = tokenize("1+(2+3)*4")
     ast, tokens = parse_expression(tokens)
     assert ast == {'tag': '+', 'left': {'tag': 'number', 'value': 1}, 'right': {'tag': '*', 'left': {'tag': '+', 'left': {'tag': 'number', 'value': 2}, 'right': {'tag': 'number', 'value': 3}}, 'right': {'tag': 'number', 'value': 4}}}
+    # prove PMDAS by writing reverse
+    tokens = tokenize("(1-2+3/4*5)+0")
+    ast, tokens = parse_expression(tokens)
+    assert ast == {
+        'tag': '+', 
+        'left': {
+            'tag': '+', 
+            'left': {
+                'tag': '-', # - evaluated first, as priority left to right
+                'left': {
+                    'tag': 'number', 
+                    'value': 1
+                }, 
+                'right': {
+                    'tag': 'number', 
+                    'value': 2
+                }
+            }, 
+            'right': { # ...+(evaluated first) MD
+                'tag': '*', 
+                'left': {
+                    'tag': '/', 
+                    'left': {
+                        'tag': 'number', 
+                        'value': 3
+                    }, 
+                    'right': {
+                        'tag': 'number', 
+                        'value': 4
+                    }
+                }, 
+                'right': {
+                    'tag': 'number', 
+                    'value': 5
+                }
+            }
+        }, 
+        'right': {
+            'tag': 'number', 
+            'value': 0
+        } # P done first, despite the "+"
+    }
 
 def parse_statement(tokens):
     """
